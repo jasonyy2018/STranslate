@@ -215,6 +215,29 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (ocrPlugin == null)
             return;
 
+        if (Settings.ScreenshotTranslateInImage && TranslateInstance.ImageTranslateService == null)
+        {
+            _notification.ShowWithButton(
+                 "无法获取图片翻译服务",
+                 "点击前往",
+                 () =>
+                 {
+                     Application.Current.Dispatcher.Invoke(() =>
+                     {
+                         SingletonWindowOpener
+                             .Open<SettingsWindow>()
+                             .Activate();
+
+                         Application.Current.Windows
+                                 .OfType<SettingsWindow>()
+                                 .First()
+                                 .Navigate(nameof(TranslatePage));
+                     });
+                 },
+                 "当前未配置启用图片翻译服务，请先前往「设置-服务-文本翻译」配置后使用该功能");
+            return;
+        }
+
         using var bitmap = await _screenshot.GetScreenshotAsync();
         if (bitmap == null) return;
 
@@ -425,7 +448,29 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task ReplaceTranslateAsync(CancellationToken cancellationToken)
     {
-        if (TranslateInstance.ReplaceService?.Plugin is not ITranslatePlugin transPlugin) return;
+        if (TranslateInstance.ReplaceService?.Plugin is not ITranslatePlugin transPlugin)
+        {
+            _notification.ShowWithButton(
+                "无法获取替换翻译服务",
+                "点击前往",
+                () =>
+                {
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        SingletonWindowOpener
+                            .Open<SettingsWindow>()
+                            .Activate();
+
+                        Application.Current.Windows
+                                .OfType<SettingsWindow>()
+                                .First()
+                                .Navigate(nameof(TranslatePage));
+                    });
+                },
+                "当前未配置启用替换翻译服务，请先前往「设置-服务-文本翻译」配置后使用该功能");
+
+            return;
+        }
 
         try
         {
