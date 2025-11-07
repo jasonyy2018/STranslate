@@ -180,7 +180,7 @@ public class ServiceManager
         {
             ServiceID = serviceID,
             MetaData = metaDataClone,
-            IsEnabled = settings?.IsEnabled ?? true,
+            IsEnabled = settings?.IsEnabled ?? false,
             DisplayName = settings?.Name ?? metaDataClone.Name
         };
 
