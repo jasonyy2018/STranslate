@@ -11,148 +11,77 @@ namespace STranslate.Core;
 public class PluginManager
 {
     private readonly ILogger<PluginManager> _logger;
-    private readonly List<PluginMetaData> _pluginMetaDatas;
+    private readonly List<PluginMetaData> _pluginMetaDatas = [];
     private readonly string _tempExtractPath;
 
     public PluginManager(ILogger<PluginManager> logger)
     {
         _logger = logger;
-        _pluginMetaDatas = [];
         _tempExtractPath = Path.Combine(Path.GetTempPath(), Constant.TmpPluginFolderName);
-
-        Directory.CreateDirectory(Constant.PreinstalledDirectory);
-        Directory.CreateDirectory(DataLocation.PluginsDirectory);
-        Directory.CreateDirectory(DataLocation.PluginCacheDirectory);
-        Directory.CreateDirectory(_tempExtractPath);
+        InitializeDirectories();
     }
 
-    /// <summary>
-    /// 所有已加载的插件元数据
-    /// </summary>
     public IEnumerable<PluginMetaData> AllPluginMetaDatas => _pluginMetaDatas;
 
-    /// <summary>
-    /// 获取指定类型的插件元数据
-    /// </summary>
-    /// <typeparam name="T">插件类型</typeparam>
-    /// <returns>匹配的插件元数据</returns>
     public IEnumerable<PluginMetaData> GetPluginMetaDatas<T>() where T : IPlugin
         => _pluginMetaDatas.Where(d => d.PluginType != null && typeof(T).IsAssignableFrom(d.PluginType));
 
     public void LoadPlugins()
     {
         var results = LoadPluginMetaDatasFromDirectories(DataLocation.PluginDirectories);
-        foreach (var result in results)
-        {
-            if (result.IsSuccess && result.PluginMetaData != null)
-            {
-                _pluginMetaDatas.Add(result.PluginMetaData);
-            }
-            else
-            {
-                _logger.LogError($"Failed to load plugin {result.PluginName}: {result.ErrorMessage}");
-            }
-        }
+
+        foreach (var result in results.Where(r => r.IsSuccess && r.PluginMetaData != null))
+            _pluginMetaDatas.Add(result.PluginMetaData!);
+
+        LogPluginLoadResults(results);
     }
 
-    public (string, PluginMetaData?) InstallPlugin(string spkgFilePath)
+    public (string Error, PluginMetaData? MetaData) InstallPlugin(string spkgFilePath)
     {
-        if (string.IsNullOrWhiteSpace(spkgFilePath))
-        {
-            return ("Plugin path cannot be null or empty.", null);
-        }
-
-        if (!File.Exists(spkgFilePath))
-        {
-            return ("Plugin file does not exist: " + spkgFilePath, null);
-        }
-
-        var extension = Path.GetExtension(spkgFilePath).ToLower();
-        if (extension != Constant.PluginFileExtension)
-        {
-            return ("Unsupported plugin file type: " + extension + ". Expected .spkg", null);
-        }
+        var validationError = ValidatePluginFile(spkgFilePath);
+        if (validationError != null) return (validationError, null);
 
         try
         {
             var pluginName = Path.GetFileNameWithoutExtension(spkgFilePath);
             var extractPath = Path.Combine(_tempExtractPath, pluginName);
 
-            _logger.LogDebug($"Loading plugin from SPKG: {pluginName}");
-
-            // 清理之前的解压目录
-            if (Directory.Exists(extractPath))
-            {
-                try
-                {
-                    Directory.Delete(extractPath, true);
-                }
-                catch (Exception ex)
-                {
-                    return ("Failed to clean extraction directory: " + ex.Message, null);
-                }
-            }
-
-            // 解压.spkg文件
-            try
-            {
-                ZipFile.ExtractToDirectory(spkgFilePath, extractPath);
-            }
-            catch (Exception ex)
-            {
-                return ("Failed to extract SPKG file: " + ex.Message, null);
-            }
+            CleanDirectory(extractPath);
+            ExtractPlugin(spkgFilePath, extractPath);
 
             var metaData = GetPluginMeta(extractPath);
+            if (metaData?.PluginID == null)
+                return ($"Invalid plugin structure: {JsonSerializer.Serialize(metaData)}", null);
 
-            if (metaData == null || string.IsNullOrEmpty(metaData.PluginID))
-            {
-                return ("Invalid plugin structure: " + JsonSerializer.Serialize(metaData), null);
-            }
-            var existPlugin = AllPluginMetaDatas.FirstOrDefault(x => x.PluginID == metaData.PluginID);
-            if (existPlugin != null)
-            {
-                return ($"插件已存在: {metaData.Name} v{existPlugin.Version}，请先卸载旧版本再安装新版本。", null);
-            }
+            if (AllPluginMetaDatas.FirstOrDefault(x => x.PluginID == metaData.PluginID) is { } existing)
+                return ($"插件已存在: {metaData.Name} v{existing.Version}，请先卸载旧版本再安装新版本。", null);
 
             var pluginPath = MoveToPluginPath(extractPath, metaData.PluginID);
             var result = LoadPluginMetaDataFromDirectory(pluginPath);
+
             if (!result.IsSuccess || result.PluginMetaData == null)
-            {
-                return ("Failed to load plugin from " + pluginPath + ": " + result.ErrorMessage, null);
-            }
+                return ($"Failed to load plugin: {result.ErrorMessage}", null);
 
             _pluginMetaDatas.Add(result.PluginMetaData);
+            Ioc.Default.GetRequiredService<IInternationalization>().LoadInstalledPluginLanguages(pluginPath);
 
-            // 加载插件语言资源
-            Ioc.Default.GetRequiredService<IInternationalization>()
-                .LoadInstalledPluginLanguages(pluginPath);
             return ("", result.PluginMetaData);
         }
         catch (Exception ex)
         {
-            return ("Unexpected error loading plugin from SPKG " + spkgFilePath + ": " + ex.Message, null);
+            return ($"Unexpected error: {ex.Message}", null);
         }
     }
 
     public bool UninstallPlugin(PluginMetaData metaData)
     {
-        // 标记插件目录删除
-        File.Create(Path.Combine(metaData.PluginDirectory, "NeedDelete.txt")).Dispose();
-
-        // 插件设置目录删除
         var combineName = Helper.GetPluginDicrtoryName(metaData);
-        var pluginSettingDirectory = Path.Combine(DataLocation.PluginSettingsDirectory, combineName);
-        if (Directory.Exists(pluginSettingDirectory))
-            File.Create(Path.Combine(pluginSettingDirectory, "NeedDelete.txt")).Dispose();
 
-        // 插件缓存目录删除
-        var pluginCacheDirectory = Path.Combine(DataLocation.PluginCacheDirectory, combineName);
-        if (Directory.Exists(pluginCacheDirectory))
-            File.Create(Path.Combine(pluginCacheDirectory, "NeedDelete.txt")).Dispose();
+        MarkForDeletion(metaData.PluginDirectory);
+        MarkForDeletion(Path.Combine(DataLocation.PluginSettingsDirectory, combineName));
+        MarkForDeletion(Path.Combine(DataLocation.PluginCacheDirectory, combineName));
 
         _pluginMetaDatas.Remove(metaData);
-
         return true;
     }
 
@@ -161,9 +90,7 @@ public class PluginManager
         try
         {
             if (Directory.Exists(_tempExtractPath))
-            {
                 Directory.Delete(_tempExtractPath, true);
-            }
         }
         catch (Exception ex)
         {
@@ -173,32 +100,59 @@ public class PluginManager
 
     #region Private Methods
 
-    /// <summary>
-    /// 从单个插件目录加载插件
-    /// </summary>
-    /// <param name="pluginDirectory">插件目录路径</param>
-    /// <returns>插件加载结果</returns>
+    private void InitializeDirectories()
+    {
+        Directory.CreateDirectory(Constant.PreinstalledDirectory);
+        Directory.CreateDirectory(DataLocation.PluginsDirectory);
+        Directory.CreateDirectory(DataLocation.PluginCacheDirectory);
+        Directory.CreateDirectory(_tempExtractPath);
+    }
+
+    private string? ValidatePluginFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            return "Plugin path cannot be null or empty.";
+
+        if (!File.Exists(filePath))
+            return $"Plugin file does not exist: {filePath}";
+
+        if (Path.GetExtension(filePath).ToLower() != Constant.PluginFileExtension)
+            return $"Unsupported plugin file type. Expected {Constant.PluginFileExtension}";
+
+        return null;
+    }
+
+    private void CleanDirectory(string path)
+    {
+        if (Directory.Exists(path))
+            Directory.Delete(path, true);
+    }
+
+    private void ExtractPlugin(string spkgFilePath, string extractPath)
+    {
+        try
+        {
+            ZipFile.ExtractToDirectory(spkgFilePath, extractPath);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to extract SPKG file: {ex.Message}", ex);
+        }
+    }
+
+    private void MarkForDeletion(string directoryPath)
+    {
+        if (Directory.Exists(directoryPath))
+            File.Create(Path.Combine(directoryPath, "NeedDelete.txt")).Dispose();
+    }
+
     private PluginLoadResult LoadPluginMetaDataFromDirectory(string pluginDirectory)
     {
         var metaData = GetPluginMeta(pluginDirectory);
         if (metaData == null)
-        {
             return PluginLoadResult.Fail("Failed to load plugin metadata", Path.GetFileName(pluginDirectory));
-        }
 
-        var result = LoadPluginPairFromMetaData(metaData);
-
-        // 记录加载结果
-        if (result.IsSuccess)
-        {
-            _logger.LogInformation($"插件加载成功: {result.PluginMetaData?.Name}");
-        }
-        else
-        {
-            _logger.LogError($"插件加载失败: {result.PluginName} - {result.ErrorMessage}");
-        }
-
-        return result;
+        return LoadPluginPairFromMetaData(metaData);
     }
 
     private List<PluginLoadResult> LoadPluginMetaDatasFromDirectories(params string[] pluginDirectories)
@@ -206,18 +160,10 @@ public class PluginManager
         var allPluginMetaDatas = GetAllPluginMetaData(pluginDirectories);
         var (uniqueList, duplicateList) = GetUniqueLatestPluginMeta(allPluginMetaDatas);
 
-        LogDuplicatePlugins(duplicateList);
+        if (duplicateList.Count > 0)
+            LogDuplicatePlugins(duplicateList);
 
-        var results = new List<PluginLoadResult>();
-        foreach (var metaData in uniqueList)
-        {
-            var result = LoadPluginPairFromMetaData(metaData);
-            results.Add(result);
-        }
-
-        LogPluginLoadResults(results);
-
-        return results;
+        return uniqueList.Select(LoadPluginPairFromMetaData).ToList();
     }
 
     private PluginLoadResult LoadPluginPairFromMetaData(PluginMetaData metaData)
@@ -228,27 +174,21 @@ public class PluginManager
             var assembly = assemblyLoader.LoadAssemblyAndDependencies();
 
             if (assembly == null)
-            {
                 return PluginLoadResult.Fail("Assembly loading failed", metaData.Name);
-            }
 
             var type = assemblyLoader.FromAssemblyGetTypeOfInterface(assembly, typeof(IPlugin));
             if (type == null)
-            {
                 return PluginLoadResult.Fail("IPlugin interface not found", metaData.Name);
-            }
 
             var assemblyName = assembly.GetName().Name;
             if (assemblyName == null)
-            {
                 return PluginLoadResult.Fail("Assembly name is null", metaData.Name);
-            }
 
             metaData.AssemblyName = assemblyName;
             metaData.PluginType = type;
-
             UpdateDirectories(metaData);
 
+            _logger.LogInformation($"插件加载成功: {metaData.Name}");
             return PluginLoadResult.Success(metaData);
         }
         catch (FileNotFoundException ex)
@@ -257,8 +197,8 @@ public class PluginManager
         }
         catch (ReflectionTypeLoadException ex)
         {
-            var loaderErrors = string.Join("; ", ex.LoaderExceptions.Select(e => e?.Message));
-            return PluginLoadResult.Fail($"Type loading failed: {loaderErrors}", metaData.Name, ex);
+            var errors = string.Join("; ", ex.LoaderExceptions.Select(e => e?.Message));
+            return PluginLoadResult.Fail($"Type loading failed: {errors}", metaData.Name, ex);
         }
         catch (Exception ex)
         {
@@ -268,77 +208,34 @@ public class PluginManager
 
     private List<PluginMetaData> GetAllPluginMetaData(string[] pluginDirectories)
     {
-        var allPluginMetaDatas = new List<PluginMetaData>();
-        var directories = pluginDirectories.SelectMany(Directory.EnumerateDirectories);
-
-        foreach (var directory in directories)
-        {
-            if (Helper.ShouldDeleteDirectory(directory))
-            {
-                Helper.TryDeleteDirectory(directory);
-                continue;
-            }
-
-            var metadata = GetPluginMeta(directory);
-            if (metadata != null)
-            {
-                allPluginMetaDatas.Add(metadata);
-            }
-        }
-
-        return allPluginMetaDatas;
+        return pluginDirectories
+            .SelectMany(Directory.EnumerateDirectories)
+            .Where(dir => !Helper.ShouldDeleteDirectory(dir) || !Helper.TryDeleteDirectory(dir))
+            .Select(GetPluginMeta)
+            .Where(metadata => metadata != null)
+            .Cast<PluginMetaData>()
+            .ToList();
     }
 
     private PluginMetaData? GetPluginMeta(string pluginDirectory)
     {
-        if (!Directory.Exists(pluginDirectory))
-        {
-            return null;
-        }
+        var configPath = Path.Combine(pluginDirectory, Constant.PluginMetaFileName);
 
-        string configPath = Path.Combine(pluginDirectory, Constant.PluginMetaFileName);
-        if (!File.Exists(configPath))
-        {
-            _logger.LogWarning($"Plugin config file not found: {configPath}");
+        if (!Directory.Exists(pluginDirectory) || !File.Exists(configPath))
             return null;
-        }
 
         try
         {
             var content = File.ReadAllText(configPath);
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                _logger.LogWarning($"Plugin config file is empty: {configPath}");
-                return null;
-            }
-
             var metaData = JsonSerializer.Deserialize<PluginMetaData>(content);
-            if (metaData == null)
-            {
-                _logger.LogWarning($"Failed to deserialize plugin metadata: {configPath}");
+
+            if (metaData == null || !File.Exists(metaData.ExecuteFilePath))
                 return null;
-            }
 
             metaData.PluginDirectory = pluginDirectory;
-
-            if (!File.Exists(metaData.ExecuteFilePath))
-            {
-                _logger.LogWarning($"Plugin executable file not found: {metaData.ExecuteFilePath}");
-                return null;
-            }
-
-            // 预装插件
-            if (pluginDirectory.Contains(Constant.PreinstalledDirectory))
-            {
-                metaData.IsPrePlugin = true;
-            }
+            metaData.IsPrePlugin = pluginDirectory.Contains(Constant.PreinstalledDirectory);
 
             return metaData;
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError($"Invalid JSON in plugin config {configPath}: {ex.Message}");
-            return null;
         }
         catch (Exception ex)
         {
@@ -350,34 +247,22 @@ public class PluginManager
     private void UpdateDirectories(PluginMetaData metaData)
     {
         var combineName = Helper.GetPluginDicrtoryName(metaData);
-        // 插件服务数据加载路径
         metaData.PluginSettingsDirectoryPath = Path.Combine(DataLocation.PluginSettingsDirectory, combineName);
-        // 插件自己确保目录存在
         metaData.PluginCacheDirectoryPath = Path.Combine(DataLocation.PluginCacheDirectory, combineName);
     }
 
-    private (List<PluginMetaData> UniqueList, List<PluginMetaData> DuplicateList) GetUniqueLatestPluginMeta(List<PluginMetaData> allPluginMetaDatas)
+    private (List<PluginMetaData> UniqueList, List<PluginMetaData> DuplicateList) GetUniqueLatestPluginMeta(
+        List<PluginMetaData> allPluginMetaDatas)
     {
-        var grouped = allPluginMetaDatas
-            .GroupBy(x => x.PluginID)
-            .ToList();
-
         var uniqueList = new List<PluginMetaData>();
         var duplicateList = new List<PluginMetaData>();
 
-        foreach (var group in grouped)
+        foreach (var group in allPluginMetaDatas.GroupBy(x => x.PluginID))
         {
-            if (group.Count() == 1)
-            {
-                uniqueList.Add(group.First());
-            }
-            else
-            {
-                // 按版本排序，取最新版本
-                var sorted = group.OrderByDescending(x => x.Version).ToList();
-                uniqueList.Add(sorted.First());
+            var sorted = group.OrderByDescending(x => x.Version).ToList();
+            uniqueList.Add(sorted.First());
+            if (sorted.Count > 1)
                 duplicateList.AddRange(sorted.Skip(1));
-            }
         }
 
         return (uniqueList, duplicateList);
@@ -385,112 +270,49 @@ public class PluginManager
 
     private string MoveToPluginPath(string extractPath, string pluginID)
     {
-        if (!Directory.Exists(extractPath))
-        {
-            throw new DirectoryNotFoundException($"Extract path does not exist: {extractPath}");
-        }
+        var pluginName = Path.GetFileName(extractPath)
+            ?? throw new InvalidOperationException("Cannot determine plugin name");
 
-        var pluginName = Path.GetFileName(extractPath);
-        if (string.IsNullOrEmpty(pluginName) || string.IsNullOrWhiteSpace(pluginID))
-        {
-            throw new InvalidOperationException("Cannot determine plugin name or plugin id from extract path");
-        }
-
-        // 根据是否为预装插件决定目标路径
         var targetPath = Constant.PrePluginIDs.Contains(pluginID)
             ? Path.Combine(Constant.PreinstalledDirectory, pluginName)
             : Path.Combine(DataLocation.PluginsDirectory, $"{pluginName}_{pluginID}");
 
-        try
-        {
-            Helper.MoveDirectory(extractPath, targetPath);
-            return targetPath;
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException($"Failed to move plugin to target path: {ex.Message}", ex);
-        }
+        Helper.MoveDirectory(extractPath, targetPath);
+        return targetPath;
     }
 
     private void LogDuplicatePlugins(List<PluginMetaData> duplicateList)
     {
-        if (duplicateList.Count == 0)
-        {
-            return;
-        }
-
         _logger.LogWarning($"发现 {duplicateList.Count} 个重复插件，将跳过加载:");
 
-        foreach (var duplicate in duplicateList)
+        foreach (var dup in duplicateList)
         {
-            var pluginType = duplicate.IsPrePlugin ? "预装插件" : "用户插件";
-            var directoryInfo = !string.IsNullOrEmpty(duplicate.PluginDirectory)
-                ? $" | 目录: {Path.GetFileName(duplicate.PluginDirectory)}"
-                : "";
-            var authorInfo = !string.IsNullOrEmpty(duplicate.Author)
-                ? $" | 作者: {duplicate.Author}"
-                : "";
-            var websiteInfo = !string.IsNullOrEmpty(duplicate.Website)
-                ? $" | 网站: {duplicate.Website}"
-                : "";
-
-            _logger.LogWarning($"  ↳ 跳过重复插件: {duplicate.Name} v{duplicate.Version} " +
-                             $"(ID: {duplicate.PluginID}) | 类型: {pluginType}" +
-                             $"{authorInfo}{directoryInfo}{websiteInfo}");
+            var info = $"{dup.Name} v{dup.Version} (ID: {dup.PluginID}) | 类型: {(dup.IsPrePlugin ? "预装插件" : "用户插件")}";
+            if (!string.IsNullOrEmpty(dup.Author)) info += $" | 作者: {dup.Author}";
+            _logger.LogWarning($"  ↳ 跳过重复插件: {info}");
         }
     }
 
     private void LogPluginLoadResults(List<PluginLoadResult> results)
     {
         var successful = results.Count(r => r.IsSuccess);
-        var failed = results.Count(r => !r.IsSuccess);
-        var total = results.Count;
+        var failed = results.Count - successful;
 
-        _logger.LogInformation($"插件加载完成: 总计 {total} 个插件，成功 {successful} 个，失败 {failed} 个");
+        _logger.LogInformation($"插件加载完成: 总计 {results.Count} 个，成功 {successful} 个，失败 {failed} 个");
 
-        // 记录成功加载的插件详情
-        var successfulPlugins = results.Where(r => r.IsSuccess && r.PluginMetaData != null).ToList();
-        if (successfulPlugins.Count > 0)
+        foreach (var result in results.Where(r => r.IsSuccess && r.PluginMetaData != null))
         {
-            _logger.LogInformation($"成功加载的插件列表:");
-            foreach (var success in successfulPlugins)
-            {
-                var metadata = success.PluginMetaData!;
-                var pluginType = metadata.IsPrePlugin ? "预装插件" : "用户插件";
-                var authorInfo = !string.IsNullOrEmpty(metadata.Author)
-                    ? $" | 作者: {metadata.Author}"
-                    : "";
-                var assemblyInfo = !string.IsNullOrEmpty(metadata.AssemblyName)
-                    ? $" | 程序集: {metadata.AssemblyName}"
-                    : "";
-
-                _logger.LogInformation($"  ✓ {metadata.Name} v{metadata.Version} " +
-                                     $"(ID: {metadata.PluginID}) | 类型: {pluginType}" +
-                                     $"{authorInfo}{assemblyInfo}");
-            }
+            var m = result.PluginMetaData!;
+            var info = $"{m.Name} v{m.Version} (ID: {m.PluginID}) | {(m.IsPrePlugin ? "预装" : "用户")}插件";
+            if (!string.IsNullOrEmpty(m.Author)) info += $" | {m.Author}";
+            _logger.LogInformation($"  ✓ {info}");
         }
 
-        // 记录失败的插件详情
-        var failedPlugins = results.Where(r => !r.IsSuccess).ToList();
-        if (failedPlugins.Count > 0)
+        foreach (var result in results.Where(r => !r.IsSuccess))
         {
-            _logger.LogError($"加载失败的插件列表:");
-            foreach (var failure in failedPlugins)
-            {
-                var pluginName = failure.PluginName ?? "未知插件";
-                var errorMessage = failure.ErrorMessage ?? "未知错误";
-                var exceptionInfo = failure.Exception != null
-                    ? $" | 异常类型: {failure.Exception.GetType().Name}"
-                    : "";
-
-                _logger.LogError($"  ✗ {pluginName}: {errorMessage}{exceptionInfo}");
-
-                // 如果有内部异常，也记录下来
-                if (failure.Exception?.InnerException != null)
-                {
-                    _logger.LogError($"    ↳ 内部异常: {failure.Exception.InnerException.Message}");
-                }
-            }
+            _logger.LogError($"  ✗ {result.PluginName ?? "未知"}: {result.ErrorMessage}");
+            if (result.Exception?.InnerException != null)
+                _logger.LogError($"    ↳ {result.Exception.InnerException.Message}");
         }
     }
 
@@ -499,11 +321,11 @@ public class PluginManager
 
 public class PluginLoadResult
 {
-    public bool IsSuccess { get; set; }
-    public string? ErrorMessage { get; set; }
-    public Exception? Exception { get; set; }
-    public PluginMetaData? PluginMetaData { get; set; }
-    public string? PluginName { get; set; }
+    public bool IsSuccess { get; init; }
+    public string? ErrorMessage { get; init; }
+    public Exception? Exception { get; init; }
+    public PluginMetaData? PluginMetaData { get; init; }
+    public string? PluginName { get; init; }
 
     public static PluginLoadResult Success(PluginMetaData metaData) => new()
     {

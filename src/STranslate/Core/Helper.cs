@@ -12,15 +12,17 @@ public static class Helper
     public static bool ShouldDeleteDirectory(string directory)
         => File.Exists(Path.Combine(directory, "NeedDelete.txt"));
 
-    public static void TryDeleteDirectory(string directory)
+    public static bool TryDeleteDirectory(string directory)
     {
         try
         {
             Directory.Delete(directory, true);
+            return true;
         }
         catch (Exception e)
         {
             _logger.LogError($"无法删除目录 <{directory}>: {e.Message}");
+            return false;
         }
     }
 
