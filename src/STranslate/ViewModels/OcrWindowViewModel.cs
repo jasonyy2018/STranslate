@@ -188,10 +188,30 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void CopyImageOrText(ImageZoom? imageZoom)
     {
-        if (string.IsNullOrEmpty(imageZoom?.SelectedText) && _sourceImage != null)
-            Clipboard.SetImage(_sourceImage);
-        else
-            Clipboard.SetText(imageZoom?.SelectedText);
+        var text = imageZoom?.SelectedText;
+        try
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                Clipboard.SetText(text);
+                _snackbar.ShowSuccess(_i18n.GetTranslation("CopySuccess"));
+                return;
+            }
+
+            if (_sourceImage != null)
+            {
+                Clipboard.SetImage(_sourceImage);
+                _snackbar.ShowSuccess(_i18n.GetTranslation("CopyImageSuccess"));
+                return;
+            }
+
+            _snackbar.ShowWarning(_i18n.GetTranslation("NoCopyContent"));
+        }
+        catch (Exception ex)
+        {
+            // 剪贴板操作在某些情况下可能失败（非 STA、其他应用占用等）
+            _snackbar.ShowError($"{_i18n.GetTranslation("CopyFailed")}: {ex.Message}");
+        }
     }
 
     [RelayCommand]

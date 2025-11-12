@@ -414,6 +414,7 @@
 
     <!--  // Snackbar Messages //  -->
     <sys:String x:Key="CopySuccess">Copied successfully</sys:String>
+    <sys:String x:Key="CopyFailed">Copied failed</sys:String>
     <sys:String x:Key="NoCopyContent">No content to copy</sys:String>
     <sys:String x:Key="SaveSuccess">Saved successfully</sys:String>
     <sys:String x:Key="SaveFailed">Save failed</sys:String>

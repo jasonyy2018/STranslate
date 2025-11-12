@@ -415,6 +415,7 @@
 
     <!--  // Snackbar Messages //  -->
     <sys:String x:Key="CopySuccess">複製成功</sys:String>
+    <sys:String x:Key="CopyFailed">複製失敗</sys:String>
     <sys:String x:Key="NoCopyContent">沒有可複製的內容</sys:String>
     <sys:String x:Key="SaveSuccess">儲存成功</sys:String>
     <sys:String x:Key="SaveFailed">儲存失敗</sys:String>
