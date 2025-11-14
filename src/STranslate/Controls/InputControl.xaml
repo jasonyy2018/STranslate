@@ -88,13 +88,13 @@
                                     Visibility="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Text, Converter={cnvt:EqualToVisibilityInverseConverter}}" />
 
                                 <ui:ProgressRing
-                                    Width="16"
-                                    Height="16"
+                                    Width="{DynamicResource STControlFontSize16}"
+                                    Height="{DynamicResource STControlFontSize16}"
                                     IsActive="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IsIdentify}"
                                     Visibility="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IsIdentify, Converter={cnvt:BoolToVisibilityConverter}}" />
 
                                 <ui:ElevationBorder
-                                    Padding="5"
+                                    Padding="5,3"
                                     VerticalAlignment="Center"
                                     Background="{DynamicResource {x:Static ui:ThemeKeys.ControlFillColorDefaultBrushKey}}"
                                     BorderBrush="{DynamicResource {x:Static ui:ThemeKeys.ControlElevationBorderBrushKey}}"

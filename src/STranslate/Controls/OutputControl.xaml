@@ -104,8 +104,8 @@
                         Orientation="Horizontal"
                         Spacing="10">
                         <Image
-                            Width="18"
-                            Height="18"
+                            Width="{DynamicResource STControlFontSize18}"
+                            Height="{DynamicResource STControlFontSize18}"
                             Source="{Binding MetaData.IconPath}" />
                         <TextBlock
                             VerticalAlignment="Center"
@@ -119,8 +119,8 @@
                             Text="&#xF618;"
                             Visibility="{Binding Plugin.DictionaryResult.ResultType, Converter={cnvt:DictionaryResultTypeVisibilityConverter}, ConverterParameter=NoResult}" />
                         <ui:ProgressRing
-                            Width="16"
-                            Height="16"
+                            Width="{DynamicResource STControlFontSize16}"
+                            Height="{DynamicResource STControlFontSize16}"
                             IsActive="{Binding Plugin.DictionaryResult.IsProcessing}"
                             Visibility="{Binding Plugin.DictionaryResult.IsProcessing, Converter={cnvt:BoolToVisibilityConverter}}" />
                         <ikw:SimpleStackPanel
@@ -147,7 +147,7 @@
                             Command="{Binding RelativeSource={RelativeSource AncestorType=control:OutputControl}, Path=RetryCommand}"
                             CommandParameter="{Binding}"
                             Icon="{x:Static ui:FluentSystemIcons.ArrowSync_20_Regular}"
-                            IconSize="10"
+                            IconSize="{DynamicResource STControlFontSize10}"
                             ToolTip="{DynamicResource Retry}"
                             Visibility="{Binding Plugin.DictionaryResult.ResultType, Converter={cnvt:DictionaryResultTypeVisibilityConverter}, ConverterParameter=Error}" />
                     </ikw:SimpleStackPanel>
@@ -177,6 +177,7 @@
                             <!--  单词显示  -->
                             <TextBox
                                 Margin="0,0,0,12"
+                                FontSize="{DynamicResource STControlFontSize16}"
                                 FontWeight="SemiBold"
                                 Foreground="{DynamicResource {x:Static ui:ThemeKeys.TextControlForegroundKey}}"
                                 IsReadOnly="True"
@@ -352,11 +353,6 @@
                     </DockPanel.Resources>
                     <DockPanel.ContextMenu>
                         <ContextMenu>
-                            <ContextMenu.Resources>
-                                <Style BasedOn="{StaticResource {x:Type ui:FontIcon}}" TargetType="ui:FontIcon">
-                                    <Setter Property="FontSize" Value="{DynamicResource STControlFontSize16}" />
-                                </Style>
-                            </ContextMenu.Resources>
                             <MenuItem
                                 Command="{Binding Source={StaticResource MainVmProxy}, Path=Data.SingleTranslateCommand}"
                                 CommandParameter="{Binding Source={StaticResource SvcProxy}, Path=Data}"
@@ -487,7 +483,7 @@
                             Command="{Binding RelativeSource={RelativeSource AncestorType=control:OutputControl}, Path=RetryCommand}"
                             CommandParameter="{Binding}"
                             Icon="{x:Static ui:FluentSystemIcons.ArrowSync_20_Regular}"
-                            IconSize="10"
+                            IconSize="{DynamicResource STControlFontSize10}"
                             ToolTip="{DynamicResource Retry}"
                             Visibility="{Binding Plugin.TransResult.IsSuccess, Converter={cnvt:BoolToVisibilityInverseConverter}}" />
                     </ikw:SimpleStackPanel>

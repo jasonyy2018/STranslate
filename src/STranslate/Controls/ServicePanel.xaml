@@ -52,7 +52,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <Image Source="{Binding MetaData.IconPath}" />
+                <Image Height="{DynamicResource STControlFontSize18}" Source="{Binding MetaData.IconPath}" />
                 <control:EditableTextBlock
                     Grid.Column="1"
                     Margin="5,0,0,0"
@@ -142,7 +142,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <Image Source="{Binding MetaData.IconPath}" />
+                <Image Height="{DynamicResource STControlFontSize18}" Source="{Binding MetaData.IconPath}" />
                 <control:EditableTextBlock
                     Grid.Column="1"
                     Margin="5,0,0,0"

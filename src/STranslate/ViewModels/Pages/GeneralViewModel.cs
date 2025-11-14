@@ -18,7 +18,10 @@ public partial class GeneralViewModel : SearchViewModelBase
     }
 
     [RelayCommand]
-    private void ResetFont() => Settings.AppFont = Win32Helper.GetSystemDefaultFont();
+    private void ResetFontFamily() => Settings.AppFont = Win32Helper.GetSystemDefaultFont();
+
+    [RelayCommand]
+    private void ResetFontSize() => Settings.TextFontSize = 14;
 
     public List<int> ScreenNumbers
     {

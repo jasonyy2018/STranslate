@@ -364,7 +364,7 @@
                             <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextFont_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
                         <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                            <Button Command="{Binding ResetFontCommand}" Content="{DynamicResource Reset}" />
+                            <Button Command="{Binding ResetFontFamilyCommand}" Content="{DynamicResource Reset}" />
                             <ComboBox
                                 DisplayMemberPath="Source"
                                 FontFamily="Microsoft YaHei UI"
@@ -379,6 +379,7 @@
                             <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextFontSize_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
                         <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
+                            <Button Command="{Binding ResetFontSizeCommand}" Content="{DynamicResource Reset}" />
                             <Slider
                                 x:Name="PART_FontSize"
                                 IsSnapToTickEnabled="True"

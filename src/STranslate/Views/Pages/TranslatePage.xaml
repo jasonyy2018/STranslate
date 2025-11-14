@@ -42,6 +42,9 @@
                     <Style BasedOn="{StaticResource {x:Type control:IconButton}}" TargetType="control:IconButton">
                         <Setter Property="Padding" Value="5" />
                     </Style>
+                    <Style BasedOn="{StaticResource {x:Type Image}}" TargetType="Image">
+                        <Setter Property="Height" Value="{DynamicResource STControlFontSize16}" />
+                    </Style>
                 </Grid.Resources>
                 <Grid
                     dd:DragDrop.DropHandler="{StaticResource ImTranDropHandler}"
@@ -78,7 +81,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Image Height="16" Source="{Binding Instance.ImageTranslateService.MetaData.IconPath}" />
+                            <Image Source="{Binding Instance.ImageTranslateService.MetaData.IconPath}" />
                             <TextBlock
                                 Grid.Column="1"
                                 Margin="5,0"
@@ -167,7 +170,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Image Height="16" Source="{Binding Instance.ReplaceService.MetaData.IconPath}" />
+                            <Image Source="{Binding Instance.ReplaceService.MetaData.IconPath}" />
                             <TextBlock
                                 Grid.Column="1"
                                 Margin="5,0"
