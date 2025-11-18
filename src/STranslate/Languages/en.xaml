@@ -442,6 +442,8 @@
     <sys:String x:Key="OperationSuccess">Operation successful</sys:String>
     <sys:String x:Key="OperationFailed">Operation failed</sys:String>
     <sys:String x:Key="OcrFailed">OCR Failed</sys:String>
+    <sys:String x:Key="TtsFailed">TTS Failed</sys:String>
+    <sys:String x:Key="ImtransFailed">Image translation failed</sys:String>
     <sys:String x:Key="NoTranslateService">No available translation service found</sys:String>
 
     <!--  // Processing Messages //  -->

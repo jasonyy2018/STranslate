@@ -271,6 +271,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             //TODO: 考虑提示用户取消操作
         }
+        catch (Exception ex)
+        {
+            _notification.Show(_i18n.GetTranslation("Prompt"), $"{_i18n.GetTranslation("OcrFailed")}\n{ex.Message}");
+            _logger.LogError(ex, "OCR execution failed");
+        }
         finally
         {
             CursorHelper.Restore();
@@ -313,6 +318,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         catch (TaskCanceledException)
         {
             //TODO: 考虑提示用户取消操作
+        }
+        catch (Exception ex)
+        {
+            _notification.Show(_i18n.GetTranslation("Prompt"), $"{_i18n.GetTranslation("OcrFailed")}\n{ex.Message}");
+            _logger.LogError(ex, "OCR execution failed");
         }
         finally
         {
@@ -383,7 +393,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             CursorHelper.Execute();
             await ttsSvc.PlayAudioAsync(text, cancellationToken);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException)
         {
             // Ignore
         }

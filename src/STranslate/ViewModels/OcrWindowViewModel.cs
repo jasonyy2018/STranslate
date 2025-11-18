@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using STranslate.Controls;
 using STranslate.Core;
@@ -30,13 +31,16 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
     public OcrWindowViewModel(
         Settings settings,
         DataProvider dataProvider,
+        ILogger<OcrWindowViewModel> logger,
         MainWindowViewModel mainWindowViewModel,
         OcrInstance ocrInstance,
         TtsInstance ttsInstance,
         Internationalization i18n,
         ISnackbar snackbar,
+        INotification notification,
         HotkeySettings hotkeySettings)
     {
+        _logger = logger;
         Settings = settings;
         DataProvider = dataProvider;
         _mainWindowViewModel = mainWindowViewModel;
@@ -44,6 +48,7 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
         _ttsInstance = ttsInstance;
         _i18n = i18n;
         _snackbar = snackbar;
+        _notification = notification;
 
         OcrEngines = _ocrInstance.Services;
         SelectedOcrEngine = _ocrInstance.Services.FirstOrDefault(x => x.IsEnabled);
@@ -61,6 +66,7 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
         HotkeySettings = hotkeySettings;
     }
 
+
     #endregion
 
     #region Properties
@@ -68,12 +74,13 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
     public Settings Settings { get; }
     public DataProvider DataProvider { get; }
 
+    private readonly ILogger<OcrWindowViewModel> _logger;
     private readonly MainWindowViewModel _mainWindowViewModel;
     private readonly OcrInstance _ocrInstance;
     private readonly TtsInstance _ttsInstance;
     private readonly Internationalization _i18n;
     private readonly ISnackbar _snackbar;
-
+    private readonly INotification _notification;
     private const double WidthMultiplier = 2;
     private const double WidthAdjustment = 12;
 
@@ -163,6 +170,11 @@ public partial class OcrWindowViewModel : ObservableObject, IDisposable
         catch (TaskCanceledException)
         {
             //TODO: 考虑提示用户取消操作
+        }
+        catch (Exception ex)
+        {
+            _notification.Show(_i18n.GetTranslation("Prompt"), $"{_i18n.GetTranslation("OcrFailed")}\n{ex.Message}");
+            _logger.LogError(ex, "OCR execution failed");
         }
         finally
         {

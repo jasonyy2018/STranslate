@@ -198,7 +198,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
                 if (!isSuccess)
                 {
                     _logger.LogWarning($"Language detection failed for text: {content.Text}");
-                    _notification.Show("提示", "语言检测失败");
+                    _notification.Show(_i18n.GetTranslation("Prompt"), "语言检测失败");
                 }
                 var result = new TranslateResult();
                 await tranSvc.TranslateAsync(new TranslateRequest(content.Text, source, target), result, cancellationToken);
@@ -214,6 +214,11 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
         catch (TaskCanceledException)
         {
             //TODO: 考虑提示用户取消操作
+        }
+        catch (Exception ex)
+        {
+            _notification.Show(_i18n.GetTranslation("Prompt"), $"{_i18n.GetTranslation("ImtransFailed")}\n{ex.Message}");
+            _logger.LogError(ex, "Image Translate execution failed");
         }
         finally
         {

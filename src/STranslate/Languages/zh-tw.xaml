@@ -443,6 +443,8 @@
     <sys:String x:Key="OperationSuccess">操作成功</sys:String>
     <sys:String x:Key="OperationFailed">操作失敗</sys:String>
     <sys:String x:Key="OcrFailed">文字辨識失敗</sys:String>
+    <sys:String x:Key="TtsFailed">語音合成失败</sys:String>
+    <sys:String x:Key="ImtransFailed">圖片翻譯失敗</sys:String>
     <sys:String x:Key="NoTranslateService">未找到可用的翻譯服務</sys:String>
 
     <!--  // Processing Messages //  -->
