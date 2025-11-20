@@ -513,8 +513,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             plugin.Reset();
             plugin.TransResult.IsProcessing = true;
-            plugin.TransResult.SourceLang = source.ToString();
-            plugin.TransResult.TargetLang = target.ToString();
             await plugin.TranslateAsync(new TranslateRequest(InputText, source, target), plugin.TransResult, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
@@ -544,8 +542,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             plugin.ResetBack();
             plugin.TransBackResult.IsProcessing = true;
-            plugin.TransBackResult.SourceLang = target.ToString();
-            plugin.TransBackResult.TargetLang = source.ToString();
             await plugin.TranslateAsync(new TranslateRequest(plugin.TransResult.Text, target, source), plugin.TransBackResult, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)

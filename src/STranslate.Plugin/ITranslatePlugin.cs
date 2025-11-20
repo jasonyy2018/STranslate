@@ -157,8 +157,6 @@ public interface ITranslatePlugin : IPlugin
     void Reset()
     {
         TransResult.Text = string.Empty;
-        TransResult.SourceLang = string.Empty;
-        TransResult.TargetLang = string.Empty;
         TransResult.Duration = TimeSpan.Zero;
         TransResult.IsProcessing = false;
         TransResult.IsSuccess = true;
@@ -173,8 +171,6 @@ public interface ITranslatePlugin : IPlugin
     {
 
         TransBackResult.Text = string.Empty;
-        TransBackResult.SourceLang = string.Empty;
-        TransBackResult.TargetLang = string.Empty;
         TransBackResult.Duration = TimeSpan.Zero;
         TransBackResult.IsProcessing = false;
         TransBackResult.IsSuccess = true;
@@ -245,8 +241,6 @@ public partial class TranslateResult : ObservableObject
     {
         Text = other.Text;
         IsSuccess = other.IsSuccess;
-        SourceLang = other.SourceLang;
-        TargetLang = other.TargetLang;
     }
 
     /// <summary>
@@ -258,16 +252,6 @@ public partial class TranslateResult : ObservableObject
     /// 翻译后的文本内容。
     /// </summary>
     [ObservableProperty] public partial string Text { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 源语言代码。
-    /// </summary>
-    [ObservableProperty] public partial string SourceLang { get; set; } = string.Empty;
-
-    /// <summary>
-    /// 目标语言代码。
-    /// </summary>
-    [ObservableProperty] public partial string TargetLang { get; set; } = string.Empty;
 
     /// <summary>
     /// 翻译耗时。
