@@ -53,56 +53,53 @@
                     ToolTipService.InitialShowDelay="200"
                     ToolTipService.Placement="Top" />
 
-                <ui:ScrollViewerEx Grid.Row="1">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="ScrollChanged">
-                            <i:InvokeCommandAction Command="{Binding ScrollChangedCommand}" PassEventArgsToCommand="True" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                    <ListBox
-                        Background="Transparent"
-                        ItemsSource="{Binding HistoryItems}"
-                        SelectedItem="{Binding SelectedItem}">
-                        <ListBox.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Command="{Binding Source={StaticResource VmProxy}, Path=Data.RefreshCommand}" Header="刷新">
-                                    <MenuItem.Icon>
-                                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.ArrowSync_20_Regular}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem
-                                    Command="{Binding Source={StaticResource VmProxy}, Path=Data.DeleteCommand}"
-                                    CommandParameter="{Binding Source={StaticResource VmProxy}, Path=Data.SelectedItem}"
-                                    Header="{DynamicResource Delete}">
-                                    <MenuItem.Icon>
-                                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Delete_20_Regular}" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </ListBox.ContextMenu>
+                <ListBox
+                    Grid.Row="1"
+                    control:ListBoxHelper.ScrollAtBottomCommand="{Binding LoadMoreCommand}"
+                    Background="Transparent"
+                    ItemsSource="{Binding HistoryItems}"
+                    SelectedItem="{Binding SelectedItem}"
+                    VirtualizingStackPanel.IsVirtualizing="True"
+                    VirtualizingStackPanel.VirtualizationMode="Recycling">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Command="{Binding Source={StaticResource VmProxy}, Path=Data.RefreshCommand}" Header="刷新">
+                                <MenuItem.Icon>
+                                    <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.ArrowSync_20_Regular}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem
+                                Command="{Binding Source={StaticResource VmProxy}, Path=Data.DeleteCommand}"
+                                CommandParameter="{Binding Source={StaticResource VmProxy}, Path=Data.SelectedItem}"
+                                Header="{DynamicResource Delete}">
+                                <MenuItem.Icon>
+                                    <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Delete_20_Regular}" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
 
-                        <ListBox.ItemContainerStyle>
-                            <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
-                                <Setter Property="Height" Value="40" />
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="VerticalContentAlignment" Value="Center" />
-                                <Setter Property="Padding" Value="10,0" />
-                            </Style>
-                        </ListBox.ItemContainerStyle>
+                    <ListBox.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="ListBoxItem">
+                            <Setter Property="Height" Value="40" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="Padding" Value="10,0" />
+                        </Style>
+                    </ListBox.ItemContainerStyle>
 
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <TextBlock
-                                        VerticalAlignment="Center"
-                                        Text="{Binding SourceText}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </ui:ScrollViewerEx>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding SourceText}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="NoWrap" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
                 <Border Grid.Row="2" Background="{DynamicResource {x:Static ui:ThemeKeys.SystemFillColorNeutralBackgroundBrushKey}}">
                     <TextBlock

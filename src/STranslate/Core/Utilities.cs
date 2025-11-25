@@ -655,6 +655,25 @@ public class Utilities
         return foundChild;
     }
 
+    /// <summary>
+    /// Finds a visual child of a specified type.
+    /// </summary>
+    public static T? GetVisualChild<T>(DependencyObject parent) where T : Visual
+    {
+        T? child = default;
+        int numVisuals = VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < numVisuals; i++)
+        {
+            var v = (Visual)VisualTreeHelper.GetChild(parent, i);
+            child = v as T ?? GetVisualChild<T>(v);
+            if (child != null)
+            {
+                break;
+            }
+        }
+        return child;
+    }
+
     #endregion
 
     #region BitmapUtils

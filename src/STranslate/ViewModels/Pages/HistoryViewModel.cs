@@ -1,10 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using STranslate.Core;
 using STranslate.Plugin;
 using System.Collections.ObjectModel;
-using System.Windows.Controls;
 
 namespace STranslate.ViewModels.Pages;
 
@@ -104,7 +102,7 @@ public partial class HistoryViewModel : ObservableObject
         _snackbar.ShowSuccess(_i18n.GetTranslation("CopySuccess"));
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanLoadMore))]
     private async Task LoadMoreAsync()
     {
         try
@@ -114,30 +112,18 @@ public partial class HistoryViewModel : ObservableObject
             var historyData = await _sqlService.GetDataCursorPagedAsync(PageSize, _lastCursorTime);
             if (!historyData.Any()) return;
 
-            // 更新游标
-            _lastCursorTime = historyData.Last().Time;
-            var uniqueHistoryItems = historyData.Where(h => !HistoryItems.Any(existing => existing.Id == h.Id));
-            foreach (var item in uniqueHistoryItems)
-                App.Current.Dispatcher.Invoke(() => HistoryItems.Add(item));
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                // 更新游标
+                _lastCursorTime = historyData.Last().Time;
+                var uniqueHistoryItems = historyData.Where(h => !HistoryItems.Any(existing => existing.Id == h.Id));
+                foreach (var item in uniqueHistoryItems)
+                    HistoryItems.Add(item);
+            });
         }
         finally
         {
             _isLoading = false;
         }
-    }
-
-    [RelayCommand]
-    private async Task ScrollChangedAsync(ScrollChangedEventArgs e)
-    {
-        // 检查是否滚动到底部
-        var scrollViewer = (ScrollViewer)e.OriginalSource;
-
-        // 老是触发ScrollableHeight==0，规避一下
-        var isAtBottom = scrollViewer.VerticalOffset >= scrollViewer.ScrollableHeight &&
-                       scrollViewer.ScrollableHeight != 0;
-        if (!isAtBottom || !CanLoadMore)
-            return;
-
-        await LoadMoreAsync();
     }
 }
