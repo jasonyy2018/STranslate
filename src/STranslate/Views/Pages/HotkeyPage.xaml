@@ -242,6 +242,24 @@
                                 ValidateKeyGesture="False"
                                 WindowTitle="{DynamicResource Hotkey_SaveToVocabulary}" />
                         </ui:SettingsCard>
+
+                        <ui:SettingsCard Header="{DynamicResource Hotkey_HistoryNavigePrevious}">
+                            <control:HotkeyControl
+                                DefaultHotkey="{Binding HotkeySettings.HistoryNavigePreviousHotkey.Default}"
+                                Hotkey="{Binding HotkeySettings.HistoryNavigePreviousHotkey.Key}"
+                                Type="MainWindow"
+                                ValidateKeyGesture="False"
+                                WindowTitle="{DynamicResource Hotkey_HistoryNavigePrevious}" />
+                        </ui:SettingsCard>
+
+                        <ui:SettingsCard Header="{DynamicResource Hotkey_HistoryNavigeNext}">
+                            <control:HotkeyControl
+                                DefaultHotkey="{Binding HotkeySettings.HistoryNavigeNextHotkey.Default}"
+                                Hotkey="{Binding HotkeySettings.HistoryNavigeNextHotkey.Key}"
+                                Type="MainWindow"
+                                ValidateKeyGesture="False"
+                                WindowTitle="{DynamicResource Hotkey_HistoryNavigeNext}" />
+                        </ui:SettingsCard>
                     </ui:SettingsExpander.Items>
                 </ui:SettingsExpander>
 

@@ -110,6 +110,8 @@
     <sys:String x:Key="Hotkey_OpenSettingsDescription">Open settings window when main window is open.</sys:String>
     <sys:String x:Key="Hotkey_OpenHistory">Open History</sys:String>
     <sys:String x:Key="Hotkey_SaveToVocabulary">Save To Vocabulary</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigePrevious">Navigate to previous history</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigeNext">Navigate to next history</sys:String>
     <sys:String x:Key="Hotkey_OcrWindow">OCR Window Hotkey</sys:String>
     <sys:String x:Key="Hotkey_ReExecuteOcr">Re-execute text recognition</sys:String>
     <sys:String x:Key="Hotkey_QrCode">Recognize QR code</sys:String>

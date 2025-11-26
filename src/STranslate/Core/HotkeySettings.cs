@@ -41,6 +41,10 @@ public partial class HotkeySettings : ObservableObject
 
     public Hotkey SaveToVocabularyHotkey { get; set; } = new("Ctrl + Shift + S");
 
+    public Hotkey HistoryNavigePreviousHotkey { get; set; } = new("Ctrl + P");
+
+    public Hotkey HistoryNavigeNextHotkey { get; set; } = new("Ctrl + N");
+
     #endregion
 
     #region Software Hotkeys - OcrWindow
@@ -72,6 +76,8 @@ public partial class HotkeySettings : ObservableObject
         new RegisteredHotkeyData(ToggleColorThemeHotkey.Key, "Hotkey_ToggleColorTheme", HotkeyType.MainWindow, () => ToggleColorThemeHotkey.Key = Constant.EmptyHotkey),
         new RegisteredHotkeyData(ToggleTopmostHotkey.Key, "Hotkey_ToggleTopmost", HotkeyType.MainWindow, () => ToggleTopmostHotkey.Key = Constant.EmptyHotkey),
         new RegisteredHotkeyData(SaveToVocabularyHotkey.Key, "Hotkey_SaveToVocabulary", HotkeyType.MainWindow, () => SaveToVocabularyHotkey.Key = Constant.EmptyHotkey),
+        new RegisteredHotkeyData(HistoryNavigePreviousHotkey.Key, "Hotkey_HistoryNavigePrevious", HotkeyType.MainWindow, () => HistoryNavigePreviousHotkey.Key = Constant.EmptyHotkey),
+        new RegisteredHotkeyData(HistoryNavigeNextHotkey.Key, "Hotkey_HistoryNavigeNext", HotkeyType.MainWindow, () => HistoryNavigeNextHotkey.Key = Constant.EmptyHotkey),
 
         // OcrWindow
         new RegisteredHotkeyData(ReExecuteOcrHotkey.Key, "Hotkey_ReExecuteOcr", HotkeyType.OcrWindow, () => ReExecuteOcrHotkey.Key = Constant.EmptyHotkey),
@@ -163,6 +169,8 @@ public partial class HotkeySettings : ObservableObject
             [nameof(HideInputHotkey)] = "Ctrl + Shift + A",
             [nameof(ToggleColorThemeHotkey)] = "Ctrl + Shift + R",
             [nameof(ToggleTopmostHotkey)] = "Ctrl + Shift + T",
+            [nameof(HistoryNavigePreviousHotkey)] = "Ctrl + P",
+            [nameof(HistoryNavigeNextHotkey)] = "Ctrl + N",
             // Software Hotkeys - OcrWindow
             [nameof(ReExecuteOcrHotkey)] = "Ctrl + R",
             [nameof(QrCodeHotkey)] = "Ctrl + Shift + R",

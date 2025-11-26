@@ -110,6 +110,8 @@
     <sys:String x:Key="Hotkey_OpenSettingsDescription">主窗口打开时，按下快捷键打开设置窗口。</sys:String>
     <sys:String x:Key="Hotkey_OpenHistory">打开历史记录</sys:String>
     <sys:String x:Key="Hotkey_SaveToVocabulary">保存到生词本</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigePrevious">导航到上一条历史记录</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigeNext">导航到下一条历史记录</sys:String>
     <sys:String x:Key="Hotkey_OcrWindow">OCR窗口快捷键</sys:String>
     <sys:String x:Key="Hotkey_ReExecuteOcr">重新执行文本识别</sys:String>
     <sys:String x:Key="Hotkey_QrCode">识别二维码</sys:String>

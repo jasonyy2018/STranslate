@@ -110,6 +110,8 @@
     <sys:String x:Key="Hotkey_OpenSettingsDescription">主視窗開啟時，按下快速鍵開啟設定視窗。</sys:String>
     <sys:String x:Key="Hotkey_OpenHistory">開啟歷史記錄</sys:String>
     <sys:String x:Key="Hotkey_SaveToVocabulary">保存到生詞本</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigePrevious">導覽到上一條歷史記錄</sys:String>
+    <sys:String x:Key="Hotkey_HistoryNavigeNext">導覽到下一條歷史記錄</sys:String>
     <sys:String x:Key="Hotkey_OcrWindow">OCR視窗快速鍵</sys:String>
     <sys:String x:Key="Hotkey_ReExecuteOcr">重新執行文字辨識</sys:String>
     <sys:String x:Key="Hotkey_QrCode">辨識二維碼</sys:String>

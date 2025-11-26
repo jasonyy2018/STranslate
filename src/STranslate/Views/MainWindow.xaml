@@ -73,6 +73,16 @@
             Command="{Binding OpenHistoryCommand}"
             CommandParameter="{Binding InputText}"
             Modifiers="{Binding HotkeySettings.OpenHistoryHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
+        <KeyBinding
+            Key="{Binding HotkeySettings.HistoryNavigePreviousHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Key}}"
+            Command="{Binding HistoryPreviousCommand}"
+            CommandParameter="{Binding InputText}"
+            Modifiers="{Binding HotkeySettings.HistoryNavigePreviousHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
+        <KeyBinding
+            Key="{Binding HotkeySettings.HistoryNavigeNextHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Key}}"
+            Command="{Binding HistoryNextCommand}"
+            CommandParameter="{Binding InputText}"
+            Modifiers="{Binding HotkeySettings.HistoryNavigeNextHotkey.Key, Converter={cnvt:StringToKeyBindingConverter}, ConverterParameter={x:Static cnvt:HotkeyMode.Modifiers}}" />
     </Window.InputBindings>
     <Grid>
         <control:HeaderControl
