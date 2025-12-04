@@ -9,6 +9,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Data;
+using Microsoft.Win32;
 
 namespace STranslate.ViewModels.Pages;
 
@@ -183,72 +184,81 @@ public partial class PluginViewModel : ObservableObject
     [RelayCommand]
     private async Task AddPluginAsync()
     {
-        // Open a file dialog to select a plugin zip file
-        var dialog = new Microsoft.Win32.OpenFileDialog
+        var dialog = new OpenFileDialog
         {
             Title = _i18n.GetTranslation("SelectPluginFile"),
             Filter = "Spkg File (*.spkg)|*.spkg",
-            Multiselect = false,
+            Multiselect = true,
             RestoreDirectory = true
         };
         if (dialog.ShowDialog() != true)
         {
-            return; // User canceled the dialog
+            return;
         }
-        var spkgPluginFilePath = dialog.FileName;
-        var installResult = _pluginService.InstallPlugin(spkgPluginFilePath);
 
-        if (installResult.RequiredUpgrade && installResult.ExistingPlugin != null)
+        var needRestart = false;
+        foreach (var spkgPluginFilePath in dialog.FileNames)
         {
-            // 插件已存在，询问是否升级
-            var result = await new ContentDialog
+            var installResult = _pluginService.InstallPlugin(spkgPluginFilePath);
+
+            if (installResult.RequiredUpgrade && installResult.ExistingPlugin != null)
             {
-                Title = _i18n.GetTranslation("PluginUpgrade"),
-                Content = string.Format(_i18n.GetTranslation("PluginUpgradeConfirm"), installResult.ExistingPlugin.Name, installResult.ExistingPlugin.Version, installResult.NewPlugin?.Version),
+                // 插件已存在，询问是否升级
+                var result = await new ContentDialog
+                {
+                    Title = _i18n.GetTranslation("PluginUpgrade"),
+                    Content = string.Format(_i18n.GetTranslation("PluginUpgradeConfirm"), installResult.ExistingPlugin.Name, installResult.ExistingPlugin.Version, installResult.NewPlugin?.Version),
+                    PrimaryButtonText = _i18n.GetTranslation("Confirm"),
+                    CloseButtonText = _i18n.GetTranslation("Cancel"),
+                    DefaultButton = ContentDialogButton.Primary,
+                }.ShowAsync();
+
+                if (result == ContentDialogResult.Primary)
+                {
+                    // 执行升级
+                    if (_pluginService.UpgradePlugin(installResult.ExistingPlugin, spkgPluginFilePath))
+                    {
+                        needRestart = true;
+                        _snackbar.ShowSuccess(_i18n.GetTranslation("PluginInstallSuccess"));
+                    }
+                    else
+                    {
+                        _snackbar.ShowError(_i18n.GetTranslation("PluginUpgradeFailed"));
+                    }
+                }
+            }
+            else if (!installResult.Succeeded)
+            {
+                await new ContentDialog
+                {
+                    Title = _i18n.GetTranslation("PluginInstallFailed"),
+                    CloseButtonText = _i18n.GetTranslation("Ok"),
+                    DefaultButton = ContentDialogButton.Close,
+                    Content = installResult.Message
+                }.ShowAsync();
+            }
+            else
+            {
+                _snackbar.ShowSuccess(_i18n.GetTranslation("PluginInstallSuccess"));
+            }
+        }
+
+        if (needRestart)
+        {
+            var restartResult = await new ContentDialog
+            {
+                Title = _i18n.GetTranslation("Prompt"),
+                Content = _i18n.GetTranslation("PluginUpgradeSuccess"),
                 PrimaryButtonText = _i18n.GetTranslation("Confirm"),
                 CloseButtonText = _i18n.GetTranslation("Cancel"),
                 DefaultButton = ContentDialogButton.Primary,
             }.ShowAsync();
 
-            if (result == ContentDialogResult.Primary)
+            if (restartResult == ContentDialogResult.Primary)
             {
-                // 执行升级
-                if (_pluginService.UpgradePlugin(installResult.ExistingPlugin, spkgPluginFilePath))
-                {
-                    var restartResult = await new ContentDialog
-                    {
-                        Title = _i18n.GetTranslation("Prompt"),
-                        Content = _i18n.GetTranslation("PluginUpgradeSuccess"),
-                        PrimaryButtonText = _i18n.GetTranslation("Confirm"),
-                        CloseButtonText = _i18n.GetTranslation("Cancel"),
-                        DefaultButton = ContentDialogButton.Primary,
-                    }.ShowAsync();
-
-                    if (restartResult == ContentDialogResult.Primary)
-                    {
-                        UACHelper.Run(_settings.StartMode);
-                        App.Current.Shutdown();
-                    }
-                }
-                else
-                {
-                    _snackbar.ShowError(_i18n.GetTranslation("PluginUpgradeFailed"));
-                }
+                UACHelper.Run(_settings.StartMode);
+                App.Current.Shutdown();
             }
-        }
-        else if (!installResult.Succeeded)
-        {
-            _ = new ContentDialog
-            {
-                Title = _i18n.GetTranslation("PluginInstallFailed"),
-                CloseButtonText = _i18n.GetTranslation("Ok"),
-                DefaultButton = ContentDialogButton.Close,
-                Content = installResult.Message
-            }.ShowAsync().ConfigureAwait(false);
-        }
-        else
-        {
-            _snackbar.ShowSuccess(_i18n.GetTranslation("PluginInstallSuccess"));
         }
     }
 
