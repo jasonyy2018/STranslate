@@ -6,7 +6,7 @@ function Log([string]$msg, [string]$color = "Yellow") {
 
 # 清理构建输出
 Log "正在清理之前的构建..."
-$artifactPath = ".\.artifacts\Release\"
+$artifactPath = "..\src\.artifacts\Release\"
 
 if (Test-Path $artifactPath) {
     Remove-Item -Path $artifactPath -Recurse -Force -ErrorAction SilentlyContinue
@@ -15,9 +15,9 @@ if (Test-Path $artifactPath) {
 # 更新 Fody 配置文件
 Log "正在更新 FodyWeavers..."
 
-$src = "STranslate/FodyWeavers.Release.xml"
-$bak = "STranslate/FodyWeavers.xml.bak"
-$dst = "STranslate/FodyWeavers.xml"
+$src = "../src/STranslate/FodyWeavers.Release.xml"
+$bak = "../src/STranslate/FodyWeavers.xml.bak"
+$dst = "../src/STranslate/FodyWeavers.xml"
 
 if (Test-Path $src) {
     Copy-Item $src $bak -Force
@@ -28,7 +28,7 @@ if (Test-Path $src) {
 
 # 构建解决方案
 Log "正在重新生成解决方案..."
-dotnet build .\STranslate.sln --configuration Release --no-incremental
+dotnet build ..\src\STranslate.sln --configuration Release --no-incremental
 
 # 还原 FodyWeavers.xml
 Log "正在还原 FodyWeavers.xml..."
@@ -37,7 +37,7 @@ git restore $dst
 # 清理插件目录中多余文件
 Log "正在清理多余的 STranslate.Plugin 文件..."
 
-$pluginsPath = ".artifacts/Release/Plugins"
+$pluginsPath = "../src/.artifacts/Release/Plugins"
 if (Test-Path $pluginsPath) {
     Get-ChildItem -Path $pluginsPath -Recurse -Include "STranslate.Plugin.dll","STranslate.Plugin.xml" |
         Remove-Item -Force -ErrorAction SilentlyContinue

@@ -25,7 +25,15 @@ public class UpdaterService(
             if (!silentUpdate)
                 notification.Show("Update Check", "Checking for updates...");
 
-            var updateManager = await GitHubUpdateManagerAsync(httpService, Constant.GitHub).ConfigureAwait(false);
+            var updateManager = await GitHubUpdateManagerAsync(httpService, "https://github.com/zggsong7/STranslate"/*Constant.GitHub*/).ConfigureAwait(false);
+
+            if (!updateManager.IsInstalled)
+            {
+                if (!silentUpdate)
+                    notification.Show("Update Check", "Application is not installed via Velopack. Update aborted.");
+                logger.LogInformation("Application is not installed via Velopack. Update aborted.");
+                return;
+            }
 
             var newUpdateInfo = await updateManager.CheckForUpdatesAsync().ConfigureAwait(false);
 
@@ -73,6 +81,8 @@ public class UpdaterService(
 
             var newVersionTips = NewVersionTips(newReleaseVersion.ToString());
 
+            if (!silentUpdate)
+                notification.Show("Update Ready", newVersionTips);
             logger.LogInformation($"Update success:{newVersionTips}");
 
             if (await iNKORE.UI.WPF.Modern.Controls.MessageBox.ShowAsync(newVersionTips, "STranslate",

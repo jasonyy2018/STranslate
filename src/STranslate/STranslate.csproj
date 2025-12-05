@@ -7,6 +7,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>true</UseWPF>
         <StartupObject>STranslate.App</StartupObject>
+        <!--// Avoid generating redundant assembly attributes //-->
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <ApplicationIcon>Resources\app.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -37,8 +40,17 @@
         <Prefer32Bit>false</Prefer32Bit>
     </PropertyGroup>
 
+    <ItemGroup Condition="'$(Configuration)' == 'Release'">
+        <PackageReference Include="Costura.Fody" PrivateAssets="all" />
+    </ItemGroup>
+
     <ItemGroup>
-        <AdditionalFiles Include="Core\NativeMethods.txt" />
+        <ApplicationDefinition Remove="App.xaml" />
+        <Page Include="App.xaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\SolutionAssemblyInfo.cs" Link="Properties\SolutionAssemblyInfo.cs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -56,6 +68,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <AdditionalFiles Include="Core\NativeMethods.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Content Include="Images\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -63,15 +79,6 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>z_stranslate_host.exe</TargetPath>
         </Content>
-    </ItemGroup>
-    
-    <ItemGroup Condition="'$(Configuration)' == 'Release'">
-        <PackageReference Include="Costura.Fody" PrivateAssets="all" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ApplicationDefinition Remove="App.xaml" />
-        <Page Include="App.xaml" />
     </ItemGroup>
 
     <ItemGroup>

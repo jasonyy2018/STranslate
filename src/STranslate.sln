@@ -11,9 +11,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Items", "Items", "{02EA681E
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
+		..\scripts\build.ps1 = ..\scripts\build.ps1
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
+		..\.github\workflows\dotnet.yml = ..\.github\workflows\dotnet.yml
 		nuget.config = nuget.config
+		..\scripts\post_build.ps1 = ..\scripts\post_build.ps1
+		SolutionAssemblyInfo.cs = SolutionAssemblyInfo.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{5AB03004-BE0C-4B0A-9458-55324D128FD9}"
